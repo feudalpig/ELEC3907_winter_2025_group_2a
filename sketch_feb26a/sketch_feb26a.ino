@@ -8,10 +8,15 @@ const uint8_t amplitude = 100;
 float vReal[samples];
 float vImag[samples];
 
+float noteFreq;
+float noteConvert;
+int octave;
+int note;
+
 ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
 
 void setup(){
-    samplingPeriod = 1000000 / samplingFrequency;
+    samplingPeriod = 1000000 / samplingFrequency - 125;
     Serial.begin(9600);
 }
 
@@ -28,7 +33,14 @@ void loop() {
     FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
     FFT.compute(FFTDirection::Forward); /* Compute FFT */
     FFT.complexToMagnitude(); /* Compute magnitudes */
-    Serial.println(FFT.majorPeak());
+    noteFreq = FFT.majorPeak();
+    noteConvert = (12*log10(noteFreq/27.5)/log10(2))+1;
+    Serial.println(noteConvert);
+    octave = noteConvert/12;
+    Serial.println(octave);
+    note = noteConvert - octave*12;
+    Serial.println(note);
     
+    Serial.println(FFT.majorPeak());
     // Rest of the code
 }
