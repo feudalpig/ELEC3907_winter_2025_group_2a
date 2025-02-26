@@ -1,7 +1,7 @@
 #include <arduinoFFT.h>
 const uint16_t samples = 128; //This value MUST ALWAYS be a power of 2
-const float signalFrequency = 1000;
-const float samplingFrequency = 2000;
+//const float signalFrequency = 1000;
+const float samplingFrequency = 1000;
 int samplingPeriod;
 const uint8_t amplitude = 100;
 
@@ -22,7 +22,6 @@ void loop() {
       vImag[i] = 0;
       vReal[i] = analogRead(A0);
       delayMicroseconds(samplingPeriod);
-      //Serial.println(vReal[i]);
     }
 
     FFT.dcRemoval(vReal, samples);
@@ -30,6 +29,6 @@ void loop() {
     FFT.compute(FFTDirection::Forward); /* Compute FFT */
     FFT.complexToMagnitude(); /* Compute magnitudes */
     Serial.println(FFT.majorPeak());
-    //delay(1000000);
+    
     // Rest of the code
 }
