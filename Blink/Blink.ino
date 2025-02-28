@@ -1,8 +1,9 @@
 /*
   The default blink is being used to test clone and commit functionality of GitHub, and should not have code modified -John N
   Please clone the repository, comment your name below, and commit to make sure you know how it works
-
+  Adam A
   John N
+  zach
 */
 
 /*
