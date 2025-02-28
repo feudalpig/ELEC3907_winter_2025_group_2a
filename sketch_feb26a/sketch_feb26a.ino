@@ -27,7 +27,7 @@ void setup(){
     noteline = (char*)malloc(sizeof(char)*16);
     pinMode(9,OUTPUT);
     Timer1.initialize(100);  //100us = 10khz
-    Timer1.pwm(9,512);
+    Timer1.pwm(9,102);
 }
 
 void loop() {
