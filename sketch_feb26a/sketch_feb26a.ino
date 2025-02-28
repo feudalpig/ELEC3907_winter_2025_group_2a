@@ -1,4 +1,5 @@
 #include <arduinoFFT.h>
+#include <math.h>
 const uint16_t samples = 128; //This value MUST ALWAYS be a power of 2
 //const float signalFrequency = 1000;
 const float samplingFrequency = 1000;
@@ -12,6 +13,7 @@ float noteFreq;
 float noteConvert;
 int octave;
 int note;
+
 
 ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
 
@@ -36,11 +38,13 @@ void loop() {
     noteFreq = FFT.majorPeak();
     noteConvert = (12*log10(noteFreq/27.5)/log10(2))+1;
     Serial.println(noteConvert);
-    octave = noteConvert/12;
-    Serial.println(octave);
-    note = noteConvert - octave*12;
+    octave = (round(noteConvert) - 1)/12;
+    note = round(noteConvert - 12*octave);
     Serial.println(note);
-    
+    if(note > 2) {
+      octave++;  }
+    Serial.println(octave);
+
     Serial.println(FFT.majorPeak());
     // Rest of the code
 }
