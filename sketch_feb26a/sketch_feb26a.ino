@@ -1,7 +1,7 @@
 #include <arduinoFFT.h>
 #include <math.h>
-const uint16_t samples = 128; //This value MUST ALWAYS be a power of 2
-//const float signalFrequency = 1000;
+#include <TimerOne.h>
+const uint16_t samples = 128;
 const float samplingFrequency = 1000;
 int samplingPeriod;
 const uint8_t amplitude = 100;
@@ -13,6 +13,9 @@ float noteFreq;
 float noteConvert;
 int octave;
 int note;
+int cents;
+char *noteline;
+char *accuracyline;
 
 
 ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
@@ -20,6 +23,11 @@ ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequen
 void setup(){
     samplingPeriod = 1000000 / samplingFrequency - 125;
     Serial.begin(9600);
+    noteline = (char*)malloc(sizeof(char)*16);
+    noteline = (char*)malloc(sizeof(char)*16);
+    pinMode(9,OUTPUT);
+    Timer1.initialize(100);  //100us = 10khz
+    Timer1.pwm(9,512);
 }
 
 void loop() {
@@ -41,9 +49,93 @@ void loop() {
     octave = (round(noteConvert) - 1)/12;
     note = round(noteConvert - 12*octave);
     Serial.println(note);
-    if(note > 2) {
+    cents = round((noteConvert - round(noteConvert)) * 10);
+    if(note > 3) {
       octave++;  }
     Serial.println(octave);
+
+    switch(note){
+      case 1:
+        noteline = "      A         ";
+        break;
+      case 2:
+        noteline = "   A#/Bb        ";
+        break;
+      case 3:
+        noteline = "      B         ";
+        break;
+      case 4:
+        noteline = "      C        ";
+        break;
+      case 5:
+        noteline = "   C#/Db        ";
+        break;
+      case 6:
+        noteline = "      D         ";
+        break;
+      case 7:
+        noteline = "   D#/Eb        ";
+        break;
+      case 8:
+        noteline = "      E         ";
+        break;
+      case 9:
+        noteline = "      F         ";
+        break;
+      case 10:
+        noteline = "   F#/Gb        ";
+        break;
+      case 11:
+        noteline = "      G         ";
+        break;
+      case 12:
+        noteline = "   G#/Ab        ";
+        break;
+    }
+    noteline[9] = '0' + octave;
+
+    switch(cents){
+      case -5:
+        accuracyline = " ||||| ==       ";
+        break;
+      case -4:
+        accuracyline = "  |||| ==       ";
+        break;
+      case -3:
+        accuracyline = "   ||| ==       ";
+        break;
+      case -2:
+        accuracyline = "    || ==       ";
+        break;
+      case -1:
+        accuracyline = "     | ==       ";
+        break;
+      case 0:
+        accuracyline = "       ==       ";
+        break;
+      case 1:
+        accuracyline = "       == |     ";
+        break;
+      case 2:
+        accuracyline = "       == ||    ";
+        break;
+      case 3:
+        accuracyline = "       == |||   ";
+        break;
+      case 4:
+        accuracyline = "       == ||||  ";
+        break;
+      case 5:
+        accuracyline = "       == ||||| ";
+        break;
+    }
+
+    Serial.println(cents);
+
+    Serial.println("================");
+    Serial.println(noteline);
+    Serial.println(accuracyline);
+    Serial.println("================");
 
     Serial.println(FFT.majorPeak());
     // Rest of the code
