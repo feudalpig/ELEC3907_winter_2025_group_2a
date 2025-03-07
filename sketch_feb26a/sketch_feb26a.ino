@@ -9,6 +9,7 @@ const uint8_t amplitude = 100;
 float vReal[samples];
 float vImag[samples];
 
+float magnitude;
 float noteFreq;
 float noteConvert;
 int octave;
@@ -16,6 +17,9 @@ int note;
 int cents;
 char *noteline;
 char *accuracyline;
+
+//TimerOne tenk();
+//TimerOne twok();
 
 
 ArduinoFFT<float> FFT = ArduinoFFT<float>(vReal, vImag, samples, samplingFrequency); /* Create FFT object */
@@ -28,6 +32,13 @@ void setup(){
     pinMode(9,OUTPUT);
     Timer1.initialize(100);  //100us = 10khz
     Timer1.pwm(9,205);
+
+    pinMode(3,OUTPUT);
+    analogWrite(3, 127);
+    //Timer1.initialize(400);  //400us = 2.5khz
+    //Timer1.pwm(2,205);
+    noteline = "                ";
+    accuracyline = "                ";
 }
 
 void loop() {
@@ -43,7 +54,8 @@ void loop() {
     FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
     FFT.compute(FFTDirection::Forward); /* Compute FFT */
     FFT.complexToMagnitude(); /* Compute magnitudes */
-    noteFreq = FFT.majorPeak();
+    FFT.majorPeak(vReal, samples, samplingFrequency, &noteFreq, &magnitude);
+    //noteFreq = FFT.majorPeak();
     noteConvert = (12*log10(noteFreq/27.5)/log10(2))+1;
     Serial.println(noteConvert);
     octave = (round(noteConvert) - 1)/12;
@@ -130,6 +142,12 @@ void loop() {
         break;
     }
 
+  if (magnitude < 300) {
+    noteline = "    N/A         ";
+    noteline[9] = ' ';
+    accuracyline = "       ==       ";
+  }
+
     Serial.println(cents);
 
     Serial.println("================");
@@ -138,6 +156,7 @@ void loop() {
     Serial.println("================");
 
     Serial.println(FFT.majorPeak());
+    Serial.println(magnitude);
     // Rest of the code
 }
 
