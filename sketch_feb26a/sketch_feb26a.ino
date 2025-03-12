@@ -33,8 +33,8 @@ void setup(){
     Timer1.initialize(100);  //100us = 10khz
     Timer1.pwm(9,205);
 
-    pinMode(3,OUTPUT);
-    analogWrite(3, 127);
+    pinMode(5,OUTPUT);
+    analogWrite(5, 127);
     //Timer1.initialize(400);  //400us = 2.5khz
     //Timer1.pwm(2,205);
     noteline = "                ";
@@ -43,6 +43,8 @@ void setup(){
 
 void loop() {
     // Get samples
+    while(analogRead(A0) < 460)
+
     for (int i = 0; i < samples; i++)
     {
       vImag[i] = 0;
