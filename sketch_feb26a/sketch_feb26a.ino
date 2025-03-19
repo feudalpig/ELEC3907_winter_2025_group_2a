@@ -43,7 +43,7 @@ void setup(){
 
 void loop() {
     // Get samples
-    while(analogRead(A0) < 460)
+    while(analogRead(A0) < 470)
 
     for (int i = 0; i < samples; i++)
     {
