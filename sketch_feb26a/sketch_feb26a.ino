@@ -2,12 +2,14 @@
 #include <math.h>
 #include <TimerOne.h>
 const uint16_t samples = 128;
-const float samplingFrequency = 1000;
+const float samplingFrequency = 710.22727;
 int samplingPeriod;
 const uint8_t amplitude = 100;
 
 float vReal[samples];
 float vImag[samples];
+
+int sample_count = 0;
 
 float magnitude;
 float noteFreq;
@@ -39,110 +41,133 @@ void setup(){
     //Timer1.pwm(2,205);
     noteline = "                ";
     accuracyline = "                ";
+
+    cli();
+
+    TCCR0A = 0;// set entire TCCR0A register to 0
+    TCCR0B = 0;// same for TCCR0B
+    TCNT0  = 0;//initialize counter value to 0
+    // set compare match register for 2khz increments
+    OCR0A = 21;// = (16*10^6) / (2000*64) - 1 (must be <256)
+    // turn on CTC mode
+    TCCR0A |= (1 << WGM01);
+    // Set CS02 and CS00 bits for 1024 prescaler
+    TCCR0B |= (1 << CS02) | (0 << CS01) | (1 << CS00);   
+    // enable timer compare interrupt
+    TIMSK0 |= (1 << OCIE0A);
+
+    sei();  // Enable back the interrupts
 }
 
 void loop() {
-    // Get samples
-    while(analogRead(A0) < 470)
+}
 
-    for (int i = 0; i < samples; i++)
-    {
-      vImag[i] = 0;
-      vReal[i] = analogRead(A0);
-      delayMicroseconds(samplingPeriod);
-    }
+ISR(TIMER0_COMPA_vect) {
+  //Serial.println(sample_count);
+  vImag[sample_count] = 0;
+  vReal[sample_count] = analogRead(A0);
+  sample_count = sample_count + 1;
+  if(sample_count > 127) {
+    cli();
+    //Serial.println("test");
+    sample_count = 0;
+    go_fuck_yourself();
+  }
+}
 
-    FFT.dcRemoval(vReal, samples);
-    FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
-    FFT.compute(FFTDirection::Forward); /* Compute FFT */
-    FFT.complexToMagnitude(); /* Compute magnitudes */
-    FFT.majorPeak(vReal, samples, samplingFrequency, &noteFreq, &magnitude);
-    //noteFreq = FFT.majorPeak();
-    noteConvert = (12*log10(noteFreq/27.5)/log10(2))+1;
-    Serial.println(noteConvert);
-    octave = (round(noteConvert) - 1)/12;
-    note = round(noteConvert - 12*octave);
-    Serial.println(note);
-    cents = round((noteConvert - round(noteConvert)) * 10);
-    if(note > 3) {
-      octave++;  }
-    Serial.println(octave);
+void go_fuck_yourself(){
 
-    switch(note){
-      case 1:
-        noteline = "      A         ";
-        break;
-      case 2:
-        noteline = "   A#/Bb        ";
-        break;
-      case 3:
-        noteline = "      B         ";
-        break;
-      case 4:
-        noteline = "      C        ";
-        break;
-      case 5:
-        noteline = "   C#/Db        ";
-        break;
-      case 6:
-        noteline = "      D         ";
-        break;
-      case 7:
-        noteline = "   D#/Eb        ";
-        break;
-      case 8:
-        noteline = "      E         ";
-        break;
-      case 9:
-        noteline = "      F         ";
-        break;
-      case 10:
-        noteline = "   F#/Gb        ";
-        break;
-      case 11:
-        noteline = "      G         ";
-        break;
-      case 12:
-        noteline = "   G#/Ab        ";
-        break;
-    }
-    noteline[9] = '0' + octave;
+  FFT.dcRemoval(vReal, samples);
+  FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward);	/* Weigh data */
+  FFT.compute(FFTDirection::Forward); /* Compute FFT */
+  FFT.complexToMagnitude(); /* Compute magnitudes */
+  FFT.majorPeak(vReal, samples, samplingFrequency, &noteFreq, &magnitude);
+  //noteFreq = FFT.majorPeak();
+  noteConvert = (12*log10(noteFreq/27.5)/log10(2))+1;
+  Serial.println(noteConvert);
+  octave = (round(noteConvert) - 1)/12;
+  note = round(noteConvert - 12*octave);
+  Serial.println(note);
+  cents = round((noteConvert - round(noteConvert)) * 10);
+  if(note > 3) {
+    octave++;  }
+  Serial.println(octave);
 
-    switch(cents){
-      case -5:
-        accuracyline = " ||||| ==       ";
-        break;
-      case -4:
-        accuracyline = "  |||| ==       ";
-        break;
-      case -3:
-        accuracyline = "   ||| ==       ";
-        break;
-      case -2:
-        accuracyline = "    || ==       ";
-        break;
-      case -1:
-        accuracyline = "     | ==       ";
-        break;
-      case 0:
-        accuracyline = "       ==       ";
-        break;
-      case 1:
-        accuracyline = "       == |     ";
-        break;
-      case 2:
-        accuracyline = "       == ||    ";
-        break;
-      case 3:
-        accuracyline = "       == |||   ";
-        break;
-      case 4:
-        accuracyline = "       == ||||  ";
-        break;
-      case 5:
-        accuracyline = "       == ||||| ";
-        break;
-    }
+  switch(note){
+    case 1:
+      noteline = "      A         ";
+      break;
+    case 2:
+      noteline = "   A#/Bb        ";
+      break;
+    case 3:
+      noteline = "      B         ";
+      break;
+    case 4:
+      noteline = "      C        ";
+      break;
+    case 5:
+      noteline = "   C#/Db        ";
+      break;
+    case 6:
+      noteline = "      D         ";
+      break;
+    case 7:
+      noteline = "   D#/Eb        ";
+      break;
+    case 8:
+      noteline = "      E         ";
+      break;
+    case 9:
+      noteline = "      F         ";
+      break;
+    case 10:
+      noteline = "   F#/Gb        ";
+      break;
+    case 11:
+      noteline = "      G         ";
+      break;
+    case 12:
+      noteline = "   G#/Ab        ";
+      break;
+  }
+  noteline[9] = '0' + octave;
+
+  switch(cents){
+    case -5:
+      accuracyline = " ||||| ==       ";
+      break;
+    case -4:
+      accuracyline = "  |||| ==       ";
+      break;
+    case -3:
+      accuracyline = "   ||| ==       ";
+      break;
+    case -2:
+      accuracyline = "    || ==       ";
+      break;
+    case -1:
+      accuracyline = "     | ==       ";
+      break;
+    case 0:
+      accuracyline = "       ==       ";
+      break;
+    case 1:
+      accuracyline = "       == |     ";
+      break;
+    case 2:
+      accuracyline = "       == ||    ";
+      break;
+    case 3:
+      accuracyline = "       == |||   ";
+      break;
+    case 4:
+      accuracyline = "       == ||||  ";
+      break;
+    case 5:
+      accuracyline = "       == ||||| ";
+      break;
+  }
 
   if (magnitude < 300) {
     noteline = "    N/A         ";
@@ -150,16 +175,18 @@ void loop() {
     accuracyline = "       ==       ";
   }
 
-    Serial.println(cents);
+  Serial.println(cents);
 
-    Serial.println("================");
-    Serial.println(noteline);
-    Serial.println(accuracyline);
-    Serial.println("================");
+  Serial.println("================");
+  Serial.println(noteline);
+  Serial.println(accuracyline);
+  Serial.println("================");
 
-    Serial.println(FFT.majorPeak());
-    Serial.println(magnitude);
-    // Rest of the code
+  Serial.println(FFT.majorPeak());
+  Serial.println(magnitude);
+  // Rest of the code
+
+  sei();
 }
 
 
