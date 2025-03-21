@@ -3,6 +3,7 @@
   Please clone the repository, comment your name below, and commit to make sure you know how it works
   Adam A
   John N
+  zach
 */
 
 /*
